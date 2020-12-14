@@ -1,0 +1,44 @@
+Imports AuthEngine
+Private objAuthModule As AuthModule
+
+btn_Save_Click
+{
+	 If bool_AddFlag And Me.txt_VoucherNo.Text = "" Then
+                'call authmodule to create entry in Formapproval Table
+                objAuthModule = New AuthModule(_StrDBPath, _StrDBPwd, BSPRow(0)("BusinessPeriodID"), str_SiteID, _MenuID, Me.Combo_Prefix.Text + str_VouNo, objUserDefaults.UserID, Date.Now)
+                objAuthModule.CreateFormApproval()
+	End If
+
+ 	ElseIf bool_EditFlag Or bool_Approveflag Then
+                If bool_Approveflag Then
+                    objAuthModule.CreateApproveEntry("")
+                End If
+                Me.txt_RevNo.Text = intRevNo ' ObjDO.objDOMain.int_RevNo
+        End If
+}
+
+
+Private Function ApproveValidation() As Boolean
+        ApproveValidation = True
+        objAuthModule = New AuthModule(_StrDBPath, _StrDBPwd, BSPRow(0)("BusinessPeriodID"), str_SiteID, _MenuID, Me.Combo_Prefix.Text + Me.txt_VoucherNo.Text, objUserDefaults.UserID, Date.Now)
+        Dim msg As String = String.Empty
+
+        If (objAuthModule.UserExistsForApproval(msg) = False) Then
+            MessageBox.Show(msg) '"Approve permission not allow for this voucher/at this stage.")
+            ApproveValidation = False
+        Else
+            msg = String.Empty
+            If (objAuthModule.UserAlreadyApproved(msg) = True) Then
+                MessageBox.Show(msg) '"Logged/above level have already Approved/declined.")
+                ApproveValidation = False
+            End If
+        End If
+
+        Return ApproveValidation
+    End Function
+
+Private Sub VoucherKeyDown()
+        If ApproveValidation() = False Then
+            Exit Sub
+        End If
+End Sub
